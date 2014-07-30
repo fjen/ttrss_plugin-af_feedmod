@@ -120,7 +120,7 @@ class Af_Feedmod extends Plugin implements IHandler
     }
     function getArticleContent($link, $config){
         global $fetch_last_content_type;
-       if (version_compare(VERSION, '1.7.9', '>=')) {
+       if (version_compare(VERSION_STATIC, '1.7.9', '>=')) {
           $html = fetch_file_contents($link);
           $content_type = $fetch_last_content_type;
        } else {
