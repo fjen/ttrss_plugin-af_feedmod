@@ -11,7 +11,7 @@ class Af_Feedmod extends Plugin implements IHandler
         return array(
             1.0,   // version
             'Replace feed contents by contents from the linked page',   // description
-            'mbirth/m42e',   // author
+            'mbirth/m42e/fjen',   // author
             false,   // is_system
         );
     }
@@ -206,28 +206,31 @@ class Af_Feedmod extends Plugin implements IHandler
        @$doc->loadHTML($html);
 
        if ($doc) {
-          $basenode = false;
           $xpath = new DOMXPath($doc);
           $entries = $xpath->query('(//'.$config['xpath'].')');   // find main DIV according to config
 
-          if ($entries->length > 0) $basenode = $entries->item(0);
-
-          if (!$basenode) return $html;
-
-          // remove nodes from cleanup configuration
-          $basenode = $this->cleanupNode($xpath, $basenode, $config);
-          $html = $doc->saveXML($basenode);
+          if ($entries->length > 0) {
+              $entrysXML = '';
+              foreach ($entries as $entry) {
+                  if ($entry) {
+                      // cleanup nodes and add to html output
+                      $entry = $this->cleanupNode($xpath, $entry, $config);
+                      $entrysXML .= $doc->saveXML($entry);
+                  }
+              }
+              $html = $entrysXML;
+          }
        }
        return $html;
     }
 
-    function cleanupNode($xpath, $basenode, $config){
+    function cleanupNode($xpath, $node, $config){
        if(($cconfig = $this->getCleanupConfig($config))!== FALSE){
           foreach ($cconfig as $cleanup) {
              if(strpos($cleanup, "./") !== 0){
                 $cleanup = '//'.$cleanup;
              }
-             $nodelist = $xpath->query($cleanup, $basenode);
+             $nodelist = $xpath->query($cleanup, $node);
              foreach ($nodelist as $node) {
                 if ($node instanceof DOMAttr) {
                    $node->ownerElement->removeAttributeNode($node);
@@ -238,7 +241,7 @@ class Af_Feedmod extends Plugin implements IHandler
              }
           }
        }
-       return $basenode;
+       return $node;
     }
 
     function getCleanupConfig($config){
